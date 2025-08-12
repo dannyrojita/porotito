@@ -15,9 +15,9 @@
     *{box-sizing:border-box}
     html,body{height:100%;margin:0}
     body{
-      font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      font-family: 'Poppins', sans-serif;
       background: radial-gradient(circle at 10% 10%, #fff7fa 0%, #fff0f3 30%, #fff6f8 100%);
-      display:flex;align-items:center;justify-content:center;padding:32px;
+      display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:32px;gap:20px;
     }
     .card{
       width:100%;max-width:760px;background:var(--card-bg);border-radius:20px;padding:36px;box-shadow:0 18px 50px rgba(226,45,90,0.12);position:relative;overflow:hidden;
@@ -32,152 +32,138 @@
     .subtitle{color:#9b3b56;margin:0;font-size:0.95rem;text-align:center}
 
     #countdown{display:flex;gap:14px;justify-content:center;margin-top:22px;flex-wrap:wrap}
-    .time-box{min-width:86px;background:linear-gradient(180deg,#fff,#fff);padding:14px;border-radius:12px;box-shadow:0 8px 18px rgba(230,77,109,0.06);text-align:center}
-    .time-box .num{font-size:1.7rem;font-weight:700;color:var(--pink-600);letter-spacing:0.5px}
+    .time-box{min-width:86px;background:#fff;padding:14px;border-radius:12px;box-shadow:0 8px 18px rgba(230,77,109,0.06);text-align:center}
+    .time-box .num{font-size:1.7rem;font-weight:700;color:var(--pink-600);}
     .time-box .label{display:block;margin-top:6px;font-size:0.78rem;color:#a33b56}
 
     .message{margin-top:20px;text-align:center;font-weight:600;color:#0b6b4d;font-size:1.15rem}
 
-    /* Floating hearts area */
+    /* Hearts */
     .hearts-area{pointer-events:none;position:absolute;inset:0;overflow:hidden}
-    .float-heart{position:absolute;bottom:-40px;font-size:18px;opacity:0;will-change:transform,opacity}
+    .float-heart{position:absolute;bottom:-40px;font-size:18px;opacity:0;}
     @keyframes floatUp{0%{transform:translateY(0) rotate(0deg);opacity:0}10%{opacity:1}100%{transform:translateY(-140vh) rotate(360deg);opacity:0}}
 
-    /* LOOK: arrived state */
-    body.arrived{background: radial-gradient(circle at 10% 10%, #fffef8 0%, #fffbe6 30%, #fff6f0 100%)}
-    body.arrived .card{box-shadow:0 26px 70px rgba(11,107,77,0.08)}
-    body.arrived .message{color:#0b6b4d;font-size:1.25rem}
-
-    /* responsive */
-    @media (max-width:520px){
-      .time-box{min-width:64px;padding:10px}
-      .title{font-size:1.2rem}
-    }
-
-    /* small present icon animation */
-    .present{display:inline-block;margin-left:6px;transform-origin:center;animation:presentPop 900ms ease-in-out infinite}
-    @keyframes presentPop{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
-
-    /* subtle shine on card */
-    .card::after{content:'';position:absolute;left:-20%;top:-10%;width:140%;height:60%;background:linear-gradient(120deg, rgba(255,255,255,0.35), rgba(255,255,255,0));transform:skewX(-18deg);pointer-events:none}
+    /* Hangman */
+    #hangman-game{margin-top:30px;text-align:center}
+    #word{font-size:1.5rem;letter-spacing:6px;margin-bottom:10px;color:#ff2f6b}
+    #letters button{margin:3px;padding:6px 10px;font-size:1rem;border:none;border-radius:6px;background:var(--pink-400);color:white;cursor:pointer;}
+    #letters button:disabled{background:#ddd;color:#888;cursor:not-allowed}
+    #hangman-status{margin:10px 0;color:#a33b56;font-weight:500}
   </style>
 </head>
 <body>
-  <div class="card" role="region" aria-label="Cuenta regresiva a tu regalito">
+  <div class="card">
     <h1 class="title">Tu regalito llega pronto, mi porotito <span class="heart">💖</span></h1>
     <p class="subtitle">Faltan:</p>
 
-    <div id="countdown" aria-live="polite" aria-atomic="true">
-      <div class="time-box">
-        <span class="num" id="days">00</span>
-        <span class="label">Días</span>
-      </div>
-      <div class="time-box">
-        <span class="num" id="hours">00</span>
-        <span class="label">Horas</span>
-      </div>
-      <div class="time-box">
-        <span class="num" id="minutes">00</span>
-        <span class="label">Minutos</span>
-      </div>
-      <div class="time-box">
-        <span class="num" id="seconds">00</span>
-        <span class="label">Segundos</span>
-      </div>
+    <div id="countdown">
+      <div class="time-box"><span class="num" id="days">00</span><span class="label">Días</span></div>
+      <div class="time-box"><span class="num" id="hours">00</span><span class="label">Horas</span></div>
+      <div class="time-box"><span class="num" id="minutes">00</span><span class="label">Minutos</span></div>
+      <div class="time-box"><span class="num" id="seconds">00</span><span class="label">Segundos</span></div>
     </div>
+    <div id="message" class="message"></div>
 
-    <div id="message" class="message" aria-live="polite"></div>
+    <!-- Hangman Game -->
+    <div id="hangman-game">
+      <div id="word"></div>
+      <div id="letters"></div>
+      <div id="hangman-status"></div>
+    </div>
   </div>
-
   <div class="hearts-area" id="heartsArea"></div>
 
-  <script>
-    // ----- CONFIGURA AQUÍ LA FECHA -----
-    // Fecha objetivo: 13 de Agosto de 2025 a las 10:00 (hora local del navegador)
-    const targetDate = new Date('2025-08-13T10:00:00');
-    // -----------------------------------
+<script>
+  const targetDate = new Date('2025-08-13T10:00:00');
+  const els = {
+    days: document.getElementById('days'),
+    hours: document.getElementById('hours'),
+    minutes: document.getElementById('minutes'),
+    seconds: document.getElementById('seconds'),
+    message: document.getElementById('message')
+  };
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function updateCountdown(){
+    const now = new Date();
+    const dist = targetDate - now;
+    if(dist <= 0){clearInterval(interval);showArrived();return;}
+    const days = Math.floor(dist / (1000*60*60*24));
+    const hours = Math.floor((dist % (1000*60*60*24)) / (1000*60*60));
+    const minutes = Math.floor((dist % (1000*60*60)) / (1000*60));
+    const seconds = Math.floor((dist % (1000*60)) / 1000);
+    els.days.textContent = pad(days);
+    els.hours.textContent = pad(hours);
+    els.minutes.textContent = pad(minutes);
+    els.seconds.textContent = pad(seconds);
+  }
+  const heartsArea = document.getElementById('heartsArea');
+  function spawnHeart(){
+    const el = document.createElement('div');
+    el.className = 'float-heart';
+    el.textContent = ['💖','💘','💝','💞'][Math.floor(Math.random()*4)];
+    const size = Math.random()*22 + 14;
+    el.style.fontSize = size + 'px';
+    el.style.left = Math.random()*100 + '%';
+    const dur = Math.random()*8 + 6;
+    el.style.animation = `floatUp ${dur}s linear forwards`;
+    el.style.animationDelay = -(Math.random()*dur) + 's';
+    heartsArea.appendChild(el);
+    setTimeout(()=> el.remove(), (dur+1)*1000);
+  }
+  const heartInterval = setInterval(spawnHeart, 700);
+  for(let i=0;i<8;i++) spawnHeart();
 
-    const els = {
-      days: document.getElementById('days'),
-      hours: document.getElementById('hours'),
-      minutes: document.getElementById('minutes'),
-      seconds: document.getElementById('seconds'),
-      message: document.getElementById('message')
-    };
-
-    function pad(n){ return String(n).padStart(2,'0'); }
-
-    function updateCountdown(){
-      const now = new Date();
-      const dist = targetDate - now;
-      if(dist <= 0){
-        clearInterval(interval);
-        els.days.textContent = '00';
-        els.hours.textContent = '00';
-        els.minutes.textContent = '00';
-        els.seconds.textContent = '00';
-        showArrived();
-        return;
+  // Hangman Game
+  const wordToGuess = "GIFT CARD STEAM";
+  let guessed = [];
+  let wrongGuesses = 0;
+  const maxWrong = 6;
+  const wordDiv = document.getElementById('word');
+  const lettersDiv = document.getElementById('letters');
+  const statusDiv = document.getElementById('hangman-status');
+  const alphabet = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+  function updateWord(){
+    wordDiv.textContent = wordToGuess.split('').map(l => l===' ' ? ' ' : (guessed.includes(l)? l : '_')).join(' ');
+  }
+  function createLetters(){
+    alphabet.split('').forEach(letter=>{
+      const btn=document.createElement('button');
+      btn.textContent=letter;
+      btn.onclick=()=>guessLetter(letter,btn);
+      lettersDiv.appendChild(btn);
+    });
+  }
+  function guessLetter(letter,btn){
+    btn.disabled=true;
+    if(wordToGuess.includes(letter)){
+      guessed.push(letter);
+      updateWord();
+      if(!wordDiv.textContent.includes('_')){
+        statusDiv.textContent = '🎉 ¡Ganaste! Es una Gift Card de Steam 💙';
       }
-
-      const days = Math.floor(dist / (1000*60*60*24));
-      const hours = Math.floor((dist % (1000*60*60*24)) / (1000*60*60));
-      const minutes = Math.floor((dist % (1000*60*60)) / (1000*60));
-      const seconds = Math.floor((dist % (1000*60)) / 1000);
-
-      els.days.textContent = pad(days);
-      els.hours.textContent = pad(hours);
-      els.minutes.textContent = pad(minutes);
-      els.seconds.textContent = pad(seconds);
+    }else{
+      wrongGuesses++;
+      statusDiv.textContent = `Fallos: ${wrongGuesses} / ${maxWrong}`;
+      if(wrongGuesses>=maxWrong){
+        statusDiv.textContent = `😢 Perdiste. Era: ${wordToGuess}`;
+      }
     }
+  }
+  createLetters();
+  updateWord();
 
-    // Generate floating hearts (decorative)
-    const heartsArea = document.getElementById('heartsArea');
-    function spawnHeart(){
-      const el = document.createElement('div');
-      el.className = 'float-heart';
-      el.textContent = ['💖','💘','💝','💞'][Math.floor(Math.random()*4)];
-      const size = Math.random()*22 + 14; // 14px - 36px
-      el.style.fontSize = size + 'px';
-      el.style.left = Math.random()*100 + '%';
-      const dur = Math.random()*8 + 6; // 6s - 14s
-      el.style.animation = `floatUp ${dur}s linear forwards`;
-      // random negative delay so they appear staggered
-      el.style.animationDelay = -(Math.random()*dur) + 's';
-      heartsArea.appendChild(el);
-      // remove after animation
-      setTimeout(()=> el.remove(), (dur+1)*1000);
-    }
+  function showArrived(){
+    els.days.textContent='00';
+    els.hours.textContent='00';
+    els.minutes.textContent='00';
+    els.seconds.textContent='00';
+    els.message.innerHTML = '¡Llegó tu regalito! <span class="present">🎁</span>';
+    clearInterval(heartInterval);
+    for(let i=0;i<80;i++) setTimeout(spawnHeart, i*40);
+  }
 
-    // continually spawn gentle hearts in the background
-    const heartInterval = setInterval(spawnHeart, 700);
-    // populate a few initially
-    for(let i=0;i<8;i++) spawnHeart();
-
-    // show arrived state
-    function showArrived(){
-      document.body.classList.add('arrived');
-      els.message.innerHTML = '¡Llegó tu regalito! <span class="present">🎁</span>';
-
-      // speed up and spawn more hearts as celebration
-      clearInterval(heartInterval);
-      for(let i=0;i<80;i++) setTimeout(spawnHeart, i*40);
-
-      // little extra pulse for the heart in the title
-      const titleHeart = document.querySelector('.title .heart');
-      if(titleHeart) titleHeart.style.transform = 'scale(1.25)';
-    }
-
-    // start
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
-
-    // Accessibility: announce target date (so screen readers get context)
-    const sr = document.createElement('div');
-    sr.style.position='absolute';sr.style.left='-9999px';sr.setAttribute('aria-hidden','false');
-    sr.textContent = `Cuenta regresiva configurada para el 13 de agosto de 2025 a las 10:00, hora local.`;
-    document.body.appendChild(sr);
-
-  </script>
+  updateCountdown();
+  const interval = setInterval(updateCountdown, 1000);
+</script>
 </body>
 </html>
