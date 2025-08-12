@@ -3,152 +3,189 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Juego del Ahorcado - Regalo</title>
+<title>Cuenta Regresiva con Juego</title>
 <style>
     body {
-        background-color: #e88cbf; /* Rosa un poco más oscuro */
-        font-family: Arial, Helvetica, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #ffe6f0, #ffccdd);
+        font-family: 'Comic Sans MS', cursive, sans-serif;
+        color: #fff;
         text-align: center;
-        padding: 20px;
         overflow-x: hidden;
     }
-
     h1 {
-        color: white;
+        font-size: 2.5rem;
+        margin-top: 20px;
     }
-
+    #countdown {
+        font-size: 2rem;
+        margin: 10px 0 20px;
+    }
+    /* Contenedor del juego */
+    #game {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 20px;
+        border-radius: 15px;
+        width: 90%;
+        max-width: 400px;
+        margin: 20px auto;
+    }
     #word {
-        font-size: 2em;
-        letter-spacing: 10px;
-        margin: 20px 0;
-        color: white;
+        font-size: 2rem;
+        letter-spacing: 8px;
     }
-
     #message {
-        font-size: 1.2em;
-        color: white;
-        margin: 20px 0;
+        margin-top: 10px;
+        font-size: 1.2rem;
     }
-
+    input {
+        padding: 5px;
+        font-size: 1rem;
+        text-align: center;
+        width: 50px;
+    }
     button {
-        padding: 10px;
-        margin: 5px;
-        font-size: 1em;
+        padding: 5px 10px;
+        font-size: 1rem;
+        cursor: pointer;
         border: none;
         border-radius: 5px;
-        background-color: white;
-        cursor: pointer;
+        background-color: #ff99bb;
+        color: white;
     }
-
-    button:hover {
-        background-color: #ddd;
-    }
-
-    /* Patito colgando */
-    #duck {
-        position: fixed;
-        top: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 3em;
-        animation: swing 2s infinite ease-in-out;
-        z-index: 3;
-    }
-
-    @keyframes swing {
-        0% { transform: translateX(-50%) rotate(10deg); }
-        50% { transform: translateX(-50%) rotate(-10deg); }
-        100% { transform: translateX(-50%) rotate(10deg); }
-    }
-
     /* Corazones flotando */
     .heart {
         position: fixed;
-        font-size: 1.5em;
-        animation: floatUp 6s linear forwards;
-        z-index: 1;
-        pointer-events: none;
+        bottom: -20px;
+        font-size: 1.5rem;
+        animation: floatUp 6s linear infinite;
+        opacity: 0.8;
     }
-
     @keyframes floatUp {
-        0% { transform: translateY(100vh); opacity: 1; }
-        100% { transform: translateY(-10vh); opacity: 0; }
+        0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0.8; }
+        100% { transform: translateY(-110vh) translateX(20px) rotate(360deg); opacity: 0; }
+    }
+    /* Patito colgando */
+    .duck-container {
+        position: relative;
+        height: 100px;
+        margin-top: 10px;
+    }
+    .string {
+        width: 2px;
+        height: 50px;
+        background-color: #aaa;
+        margin: 0 auto;
+    }
+    .duck {
+        font-size: 3rem;
+        display: inline-block;
+        animation: swing 2s ease-in-out infinite;
+        transform-origin: top center;
+    }
+    @keyframes swing {
+        0% { transform: rotate(5deg); }
+        50% { transform: rotate(-5deg); }
+        100% { transform: rotate(5deg); }
     }
 </style>
 </head>
 <body>
 
-<div id="duck">🦆</div>
-<h1>🎁 Adivina tu regalo 🎁</h1>
-<div id="word"></div>
-<div id="message"></div>
-<div id="keyboard"></div>
+<h1>Tu regalito llega pronto, mi porotito 💖</h1>
+
+<div id="countdown"></div>
+
+<div class="duck-container">
+    <div class="string"></div>
+    <div class="duck">🦆</div>
+</div>
+
+<div id="game">
+    <h2>¡Adivina tu regalo!</h2>
+    <div id="word"></div>
+    <input type="text" id="letter" maxlength="1">
+    <button onclick="guessLetter()">Probar</button>
+    <div id="message"></div>
+</div>
 
 <script>
-    const words = ["GIFT CARD STEAM"];
-    let selectedWord = words[0];
+    // Cuenta regresiva
+    const countdown = document.getElementById("countdown");
+    const targetDate = new Date("2025-08-13T10:00:00").getTime();
+    setInterval(() => {
+        const now = new Date().getTime();
+        const distance = targetDate - now;
+        if (distance < 0) {
+            countdown.innerHTML = "¡Llegó el momento! 🎁";
+            return;
+        }
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        countdown.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    }, 1000);
+
+    // Juego del ahorcado
+    const wordToGuess = "GIFTCARD DE STEAM".toUpperCase();
     let guessedLetters = [];
-    let mistakes = 0;
-    const maxMistakes = 6;
+    const wordDisplay = document.getElementById("word");
+    const message = document.getElementById("message");
 
-    function updateWord() {
-        let displayWord = "";
-        for (let letter of selectedWord) {
+    function updateWordDisplay() {
+        let display = "";
+        for (let letter of wordToGuess) {
             if (letter === " ") {
-                displayWord += " ";
+                display += " ";
             } else if (guessedLetters.includes(letter)) {
-                displayWord += letter;
+                display += letter;
             } else {
-                displayWord += "_";
+                display += "_";
             }
+            display += " ";
         }
-        document.getElementById("word").innerText = displayWord;
-        if (!displayWord.includes("_")) {
-            document.getElementById("message").innerText = "¡Ganaste! 🎉 Tu regalo es una Giftcard de Steam 💙";
-        }
+        wordDisplay.textContent = display;
     }
 
-    function handleGuess(letter) {
-        if (!guessedLetters.includes(letter)) {
-            guessedLetters.push(letter);
-            if (selectedWord.includes(letter)) {
-                updateWord();
-            } else {
-                mistakes++;
-                if (mistakes >= maxMistakes) {
-                    document.getElementById("message").innerText = "Perdiste 😢 Era: " + selectedWord;
-                }
-            }
+    function guessLetter() {
+        const input = document.getElementById("letter");
+        const letter = input.value.toUpperCase();
+        input.value = "";
+        if (!letter.match(/[A-ZÑ]/)) {
+            message.textContent = "Por favor ingresa una letra válida.";
+            return;
+        }
+        if (guessedLetters.includes(letter)) {
+            message.textContent = "Ya probaste esa letra.";
+            return;
+        }
+        guessedLetters.push(letter);
+        if (wordToGuess.includes(letter)) {
+            message.textContent = "¡Bien hecho!";
+        } else {
+            message.textContent = "No está esa letra.";
+        }
+        updateWordDisplay();
+        if (!wordDisplay.textContent.includes("_")) {
+            message.textContent = "¡Ganaste! 🎉 El regalo es una Giftcard de Steam 💖";
         }
     }
+    updateWordDisplay();
 
-    function generateKeyboard() {
-        const keyboard = document.getElementById("keyboard");
-        keyboard.innerHTML = "";
-        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        for (let letter of letters) {
-            let button = document.createElement("button");
-            button.innerText = letter;
-            button.onclick = () => handleGuess(letter);
-            keyboard.appendChild(button);
-        }
-    }
-
-    // Corazones apareciendo poco a poco
+    // Corazones flotantes
     function createHeart() {
         const heart = document.createElement("div");
-        heart.classList.add("heart");
+        heart.className = "heart";
+        heart.textContent = "💕";
         heart.style.left = Math.random() * 100 + "vw";
-        heart.style.animationDuration = (Math.random() * 3 + 3) + "s";
-        heart.innerText = "💕";
+        heart.style.fontSize = (Math.random() * 1.5 + 1) + "rem";
+        heart.style.animationDuration = (Math.random() * 3 + 4) + "s";
         document.body.appendChild(heart);
         setTimeout(() => heart.remove(), 6000);
     }
-
-    setInterval(createHeart, 800); // Intervalo más lento
-
-    updateWord();
-    generateKeyboard();
+    setInterval(createHeart, 500);
 </script>
 
 </body>
